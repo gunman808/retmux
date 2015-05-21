@@ -8,6 +8,25 @@ import tmux_obj
 import shutil
 import random, string
 
+def check_output(*popenargs, **kwargs):
+    r"""Run command with arguments and return its output as a byte string.
+
+    Backported from Python 2.7 as it's implemented as pure python on stdlib.
+
+    >>> check_output(['/usr/bin/python', '--version'])
+    Python 2.6.2
+    """
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        error = subprocess.CalledProcessError(retcode, cmd)
+        error.output = output
+        raise error
+    return output
 
 def object2dict(obj):
     """convert object to a dict"""
@@ -65,7 +84,7 @@ def exec_cmd(cmd):
     """execute a shell command
     the cmd argument is a list
     return the output with the last linebreak '\n' removed"""
-    s = subprocess.check_output(cmd)
+    s = check_output(cmd)
     if s:
         s = re.sub('\n$','',s)
     return s
@@ -74,7 +93,7 @@ def cmd_return_code(cmd):
     the cmd argument is a list
     return the return code"""
     return subprocess.call(cmd)
-    
+
 
 
 def exec_cmd_redir(cmd, file_fullname):
